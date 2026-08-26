@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>I Love You Honey</title>
+<link rel="stylesheet" href="project4.css" />
+</head>
+<body>
+
+  <!-- Layer 1: matrix / digital rain background -->
+  <canvas id="rainCanvas"></canvas>
+
+  <!-- Layer 2: soft bokeh / defocus blobs used during transitions -->
+  <canvas id="bokehCanvas"></canvas>
+
+  <!-- Layer 3: heart particle system (thousands of glowing points) -->
+  <canvas id="heartCanvas"></canvas>
+  <canvas id="heartGlowCanvas"></canvas>
+
+  <!-- Layer 4: DOM text stage (countdown, words, final caption) -->
+  <div id="stage">
+    <div id="countdown"></div>
+    <div id="wordStage"></div>
+    <div id="centerCaption">I <span class="heartGlyph">&#10084;</span> Love You Honey</div>
+  </div>
+
+  <div id="hint">tap / click anywhere to replay</div>
+
+  <script src="project4.js"></script>
+</body>
+</html>
