@@ -1,0 +1,233 @@
+/* =========================================================
+   GLOBAL / RESET
+   ========================================================= */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #05060a;
+  overflow: hidden;
+  font-family: 'Segoe UI', 'Trebuchet MS', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =========================================================
+   CANVAS LAYERS (stacked, full-screen, GPU friendly)
+   ========================================================= */
+#rainCanvas,
+#bokehCanvas,
+#heartCanvas,
+#heartGlowCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+}
+
+#rainCanvas   { z-index: 1; }
+#bokehCanvas  { z-index: 2; opacity: 0; transition: opacity 1.2s ease; }
+#heartGlowCanvas {
+  z-index: 3;
+  filter: blur(14px) saturate(1.3);
+  opacity: 0;
+  transition: opacity 1.4s ease;
+  will-change: opacity;
+}
+#heartCanvas  {
+  z-index: 4;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+  will-change: opacity;
+}
+
+#bokehCanvas.show,
+#heartCanvas.show,
+#heartGlowCanvas.show {
+  opacity: 1;
+}
+
+/* =========================================================
+   TEXT STAGE
+   ========================================================= */
+#stage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* ---------- Shared "LED / dot matrix" glowing text look ---------- */
+.ledText {
+  position: relative;
+  font-weight: 800;
+  line-height: 1;
+  color: transparent;
+  background-image:
+    radial-gradient(circle, #fbf6e8 42%, transparent 45%),
+    linear-gradient(100deg, #fff2c4 20%, #ffffff 40%, #ffd977 55%, #fff2c4 75%);
+  background-size: 9px 9px, 300% 100%;
+  background-blend-mode: normal;
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter:
+    drop-shadow(0 0 10px rgba(255, 221, 136, 0.75))
+    drop-shadow(0 0 26px rgba(255, 187, 85, 0.55))
+    drop-shadow(0 0 55px rgba(255, 187, 85, 0.35));
+  opacity: 0;
+  transform: scale(0.35);
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.ledText.pop {
+  animation:
+    ledPop 0.85s cubic-bezier(.22, 1, .36, 1) forwards,
+    ledShine 1.1s linear forwards;
+}
+
+@keyframes ledPop {
+  0%   { opacity: 0; transform: scale(0.35); letter-spacing: 14px; }
+  38%  { opacity: 1; transform: scale(1.16); letter-spacing: 2px; }
+  58%  { opacity: 1; transform: scale(0.97); }
+  78%  { opacity: 1; transform: scale(1);    }
+  100% { opacity: 1; transform: scale(1);    }
+}
+
+@keyframes ledShine {
+  0%   { background-position: 0 0, 200% 0; }
+  100% { background-position: 0 0, -60% 0; }
+}
+
+.ledText.fadeOut {
+  animation: ledFadeOut 0.45s ease forwards;
+}
+@keyframes ledFadeOut {
+  to { opacity: 0; transform: scale(0.82); }
+}
+
+/* countdown numbers */
+#countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(90px, 26vw, 340px);
+  pointer-events: none;
+}
+#countdown .ledText {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform-origin: center;
+  margin: 0;
+}
+
+/* travelling spark that orbits each numeral / letter */
+.spark {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  background: radial-gradient(circle, #fffdf0 0%, #ffe9a8 45%, transparent 72%);
+  box-shadow: 0 0 18px 6px rgba(255, 233, 168, 0.85);
+  opacity: 0;
+}
+.spark.show {
+  animation: orbit 0.85s ease-in-out forwards;
+}
+@keyframes orbit {
+  0%   { opacity: 0; transform: translate(-50%, -50%) rotate(0deg)   translateX(15vmin) rotate(0deg)    scale(0.4); }
+  14%  { opacity: 1; }
+  50%  { transform: translate(-50%, -50%) rotate(180deg) translateX(15vmin) rotate(-180deg) scale(1); }
+  86%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(360deg) translateX(15vmin) rotate(-360deg) scale(0.4); }
+}
+
+/* word-by-word reveal: You / Are / My / Love */
+#wordStage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#wordStage .ledText {
+  font-size: clamp(64px, 15vw, 210px);
+  position: relative;
+}
+
+/* final centered script caption inside the heart */
+#centerCaption {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.6);
+  z-index: 12;
+  white-space: nowrap;
+  font-family: 'Segoe Script', 'Brush Script MT', cursive;
+  font-size: clamp(16px, 3.6vmin, 34px);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: transparent;
+  background: linear-gradient(100deg, #ffe1ec 15%, #ffffff 40%, #ff9fc7 55%, #ffe1ec 80%);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter:
+    drop-shadow(0 0 10px rgba(255, 47, 143, 0.75))
+    drop-shadow(0 0 26px rgba(255, 47, 143, 0.55));
+  opacity: 0;
+}
+#centerCaption.show {
+  animation: capIn 1.3s cubic-bezier(.22, 1, .36, 1) forwards,
+             ledShine 2.6s linear 1.3s infinite;
+}
+@keyframes capIn {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.55); }
+  60%  { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+.heartGlyph {
+  color: #ff3f6f;
+  -webkit-text-fill-color: #ff3f6f;
+  text-shadow: 0 0 10px rgba(255, 47, 111, 0.9);
+}
+
+/* =========================================================
+   HINT
+   ========================================================= */
+#hint {
+  position: fixed;
+  bottom: 4vh;
+  width: 100%;
+  text-align: center;
+  color: rgba(255, 143, 199, 0.65);
+  font-size: 12px;
+  letter-spacing: 1px;
+  z-index: 20;
+}
+
+/* =========================================================
+   RESPONSIVE TWEAKS
+   ========================================================= */
+@media (max-width: 480px) {
+  #countdown { font-size: clamp(80px, 34vw, 220px); }
+  #wordStage .ledText { font-size: clamp(50px, 20vw, 140px); }
+}
